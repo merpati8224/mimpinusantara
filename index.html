@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peta Mimpi Indonesia | Lokasi Otomatis</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,700;1,400&display=swap');
+
+        body { 
+            background: radial-gradient(circle at top, #fff5f7 0%, #fdf6ec 100%);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #334155;
+            min-height: 100vh;
+        }
+
+        #map { 
+            height: 65vh; 
+            width: 100%; 
+            border-radius: 30px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+            border: 10px solid white;
+            z-index: 10;
+        }
+
+        .dream-marker {
+            background: #fb7185;
+            border: 3px solid white;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(251, 113, 133, 0.6);
+            animation: glow 2s infinite alternate;
+        }
+
+        @keyframes glow {
+            from { transform: scale(0.8); box-shadow: 0 0 5px rgba(251, 113, 133, 0.4); }
+            to { transform: scale(1.2); box-shadow: 0 0 20px rgba(251, 113, 133, 0.8); }
+        }
+
+        .custom-popup .leaflet-popup-content-wrapper {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(4px);
+            border-radius: 16px;
+            padding: 8px;
+        }
+
+        .btn-glow {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: linear-gradient(135deg, #fb7185 0%, #f43f5e 100%);
+        }
+
+        .btn-glow:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(244, 63, 94, 0.3);
+        }
+
+        .glass-header {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="glass-header text-center mb-10 border border-white/50">
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-800 tracking-tight">
+                🇮🇩 Peta Mimpi Nusantara
+            </h1>
+            <p class="text-slate-500 mt-4 italic text-lg max-w-2xl mx-auto">
+                "Jejak harapan anonim dari Sabang sampai Merauke. Karena setiap mimpi layak untuk diingat."
+            </p>
+        </header>
+
+        <main class="relative">
+            <div id="map"></div>
+            
+            <div class="absolute bottom-[-30px] left-1/2 -translate-x-1/2 z-[1000] w-full px-4 text-center">
+                <button onclick="tambahMimpi()" class="btn-glow text-white px-8 py-5 rounded-2xl font-bold shadow-2xl text-lg flex items-center gap-3 mx-auto">
+                    <span class="text-2xl">✨</span> Sematkan Mimpimu Disini
+                </button>
+            </div>
+        </main>
+
+        <section class="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <div class="p-6">
+                <div class="text-3xl mb-2">🔒</div>
+                <h3 class="font-bold">100% Anonim</h3>
+                <p class="text-sm text-slate-500">Tanpa nama, tanpa login. Hanya murni harapanmu.</p>
+            </div>
+            <div class="p-6">
+                <div class="text-3xl mb-2">📍</div>
+                <h3 class="font-bold">Lokasi Akurat</h3>
+                <p class="text-sm text-slate-500">Mimpi muncul tepat di koordinat tempat tinggalmu.</p>
+            </div>
+            <div class="p-6">
+                <div class="text-3xl mb-2">⏳</div>
+                <h3 class="font-bold">Abadi</h3>
+                <p class="text-sm text-slate-500">Mimpimu akan tetap menyala di penyimpanan browser.</p>
+            </div>
+        </section>
+
+        <footer class="mt-20 mb-10 text-center text-slate-400 text-xs uppercase tracking-[0.2em]">
+            &copy; 2026 • The Random Map of Dreams • Indonesia Edition
+        </footer>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // 1. Inisialisasi Peta
+        const map = L.map('map', {
+            zoomControl: true,
+            scrollWheelZoom: false 
+        }).setView([-2.5489, 118.0149], 5);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // 2. Load Data dari LocalStorage
+        let koleksiMimpi = JSON.parse(localStorage.getItem('peta_mimpi_indo')) || [
+            { lat: -6.2088, lng: 106.8456, text: "Ingin kuliah di ITB dan banggain orang tua." },
+            { lat: -7.2575, lng: 112.7521, text: "Semoga tahun ini bisa buka usaha kopi sendiri." }
+        ];
+
+        function renderMimpi(mimpi) {
+            const iconMimpi = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div class="dream-marker" style="width: 15px; height: 15px;"></div>`,
+                iconSize: [15, 15],
+                iconAnchor: [7, 7]
+            });
+
+            L.marker([mimpi.lat, mimpi.lng], { icon: iconMimpi })
+             .addTo(map)
+             .bindPopup(`
+                <div class="custom-popup" style="min-width: 150px">
+                    <p style="font-size: 14px; line-height: 1.6; color: #334155;">
+                        <span style="display:block; font-size: 20px; margin-bottom: 5px;">💭</span>
+                        "${mimpi.text}"
+                    </p>
+                    <hr style="margin: 8px 0; border: 0; border-top: 1px solid #eee;">
+                    <small style="color: #94a3b8; font-style: italic;">Seseorang dari Nusantara</small>
+                </div>
+            `);
+        }
+
+        koleksiMimpi.forEach(renderMimpi);
+
+        // 3. Fungsi Tambah Mimpi dengan Geolocation
+        function tambahMimpi() {
+            const teks = prompt("Apa mimpi atau harapanmu untuk masa depan?");
+            
+            if (teks && teks.trim() !== "") {
+                if (navigator.geolocation) {
+                    alert("Sedang mencari lokasimu... Mohon izinkan akses jika muncul permintaan izin. ✨");
+                    
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const lat = position.coords.latitude;
+                            const lng = position.coords.longitude;
+                            simpanDanTerbang(lat, lng, teks);
+                        },
+                        (error) => {
+                            alert("Lokasi tidak ditemukan. Menggunakan koordinat acak.");
+                            const lat = (Math.random() * (5.5 - (-10.5)) + (-10.5)).toFixed(4);
+                            const lng = (Math.random() * (140.5 - 95.5) + 95.5).toFixed(4);
+                            simpanDanTerbang(lat, lng, teks);
+                        }
+                    );
+                } else {
+                    alert("Browser tidak mendukung fitur lokasi.");
+                }
+            }
+        }
+
+        function simpanDanTerbang(lat, lng, teks) {
+            const mimpiBaru = { lat, lng, text: teks };
+            koleksiMimpi.push(mimpiBaru);
+            localStorage.setItem('peta_mimpi_indo', JSON.stringify(koleksiMimpi));
+            
+            renderMimpi(mimpiBaru);
+            map.flyTo([lat, lng], 13, { duration: 3 });
+
+            setTimeout(() => {
+                alert("Mimpimu telah tersemat tepat di lokasi kamu berada!");
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
