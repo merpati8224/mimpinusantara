@@ -52,11 +52,11 @@
             border: 1px solid rgba(255,255,255,0.5);
             transition: all 0.3s ease;
         }
+        .btn-mystery:hover { background: rgba(255, 255, 255, 0.6); }
 
         #dreamModal { opacity: 0; pointer-events: none; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 9999; }
         #dreamModal.active { opacity: 1; pointer-events: auto; }
         
-        /* Gaya tombol hapus di dalam popup */
         .btn-delete-dream {
             margin-top: 10px;
             color: #ef4444;
@@ -94,7 +94,7 @@
                     <span class="text-lg">Tanam Mimpimu</span>
                 </button>
 
-                <a href="#" class="btn-mystery px-8 py-3 rounded-xl text-slate-700 text-sm font-semibold shadow-sm flex items-center gap-2">
+                <a href="https://deductpursue.com/mz7pf8x12c?key=cbd09e6311e0462040e6195817956dd7" target="_blank" class="btn-mystery px-8 py-3 rounded-xl text-slate-700 text-sm font-semibold shadow-sm flex items-center gap-2">
                     <span>Lihat apa yang terjadi jika mimpimu terwujud hari ini...</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -140,7 +140,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, push, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Konfigurasi Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCkPSJrq4eThM8gA-So7kjCGa11JP0NU1A",
             authDomain: "mimpinusantara.firebaseapp.com",
@@ -155,7 +154,6 @@
         const db = getDatabase(app);
         const dreamsRef = ref(db, 'dreams');
 
-        // Inisialisasi Peta
         const map = L.map('map', { 
             zoomControl: false, 
             attributionControl: false
@@ -165,10 +163,8 @@
 
         let activeMarkers = {};
 
-        // Mendengarkan perubahan data secara realtime
         onValue(dreamsRef, (snapshot) => {
             const data = snapshot.val();
-            // Bersihkan marker lama sebelum render ulang
             Object.values(activeMarkers).forEach(m => map.removeLayer(m));
             activeMarkers = {};
 
@@ -177,7 +173,7 @@
                 
                 Object.keys(data).forEach(id => {
                     const info = data[id];
-                    const isMine = myKeys.includes(id); // Cek kepemilikan
+                    const isMine = myKeys.includes(id); 
                     
                     const icon = L.divIcon({
                         className: 'custom-icon',
@@ -185,7 +181,6 @@
                         iconSize: [16,16]
                     });
 
-                    // Tombol hapus hanya muncul di popup jika ini milik user
                     const deleteBtn = isMine 
                         ? `<br><button onclick="window.confirmHapus('${id}')" class="btn-delete-dream">Hapus Mimpi Saya</button>` 
                         : '';
@@ -207,12 +202,10 @@
             }
         });
 
-        // FUNGSI HAPUS (Global Scope agar bisa dipanggil HTML popup)
         window.confirmHapus = (id) => {
             if(confirm("Apakah kamu ingin menarik kembali mimpi ini dari publik?")) {
                 const itemRef = ref(db, `dreams/${id}`);
                 remove(itemRef).then(() => {
-                    // Update LocalStorage agar ID yang dihapus hilang
                     let keys = JSON.parse(localStorage.getItem('my_dream_keys')) || [];
                     keys = keys.filter(k => k !== id);
                     localStorage.setItem('my_dream_keys', JSON.stringify(keys));
@@ -220,7 +213,6 @@
             }
         };
 
-        // FUNGSI PROSES INPUT
         window.prosesMimpi = async () => {
             const text = document.getElementById('dreamInput').value;
             const btnSubmit = document.getElementById('btnSubmit');
@@ -237,7 +229,7 @@
                 (err) => {
                     btnSubmit.disabled = false;
                     btnSubmit.innerHTML = "Sematkan Ke Peta ✨";
-                    alert("Gagal mendeteksi lokasi. Pastikan GPS aktif dan izinkan akses lokasi.");
+                    alert("Gagal mendeteksi lokasi. Pastikan GPS aktif.");
                 },
                 { enableHighAccuracy: true, timeout: 8000 }
             );
@@ -248,7 +240,6 @@
             const payload = { text, lat, lng, time: Date.now() };
             
             set(newRef, payload).then(() => {
-                // Simpan ID ke local storage untuk identifikasi kepemilikan
                 let keys = JSON.parse(localStorage.getItem('my_dream_keys')) || [];
                 keys.push(newRef.key);
                 localStorage.setItem('my_dream_keys', JSON.stringify(keys));
@@ -262,12 +253,13 @@
             });
         }
 
-        // Window Controls
         window.openModal = () => {
             document.getElementById('dreamModal').classList.add('active');
             setTimeout(() => document.getElementById('dreamInput').focus(), 300);
         };
         window.closeModal = () => document.getElementById('dreamModal').classList.remove('active');
     </script>
+
+    <script src="https://deductpursue.com/48/cf/ee/48cfeecf17e3bc0d49659bbc3994d57b.js"></script>
 </body>
 </html>
